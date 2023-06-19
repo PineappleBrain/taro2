@@ -156,7 +156,7 @@ class PhaserUnit extends PhaserAnimatedEntity {
 		if (this.label) {
 			const {displayHeight, displayWidth} = this.sprite;
 			const labelHeight = this.label.getBounds().height;
-			this.label.y = - displayHeight/2 - labelHeight*1.5;
+			this.label.y = - displayHeight/1.5 - labelHeight/2;
 			/*if (this.rtLabel) {
 				this.rtLabel.y = this.label.y;
 			}*/

@@ -134,7 +134,7 @@ var PhaserUnit = /** @class */ (function (_super) {
         if (this.label) {
             var _a = this.sprite, displayHeight = _a.displayHeight, displayWidth = _a.displayWidth;
             var labelHeight = this.label.getBounds().height;
-            this.label.y = -displayHeight / 2 - labelHeight * 1.5;
+            this.label.y = -displayHeight / 1.5 - labelHeight / 2;
             /*if (this.rtLabel) {
                 this.rtLabel.y = this.label.y;
             }*/
