@@ -2624,6 +2624,13 @@ var ActionComponent = TaroEntity.extend({
 						}
 						break;
 
+					case 'aiChangePathfindingMethod':
+						var unit = self._script.variable.getValue(action.unit, vars);
+						var pathFindingMethod = self._script.variable.getValue(action.pathFindingMethod, vars);
+						if (unit && unit.ai) {
+							unit.ai.setPathFindingMethod(pathFindingMethod);
+						}
+
 
 					case 'makePlayerTradeWithPlayer':
 						var playerA = self._script.variable.getValue(action.playerA, vars);

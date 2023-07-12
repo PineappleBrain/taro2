@@ -38,7 +38,7 @@ var AIComponent = TaroEntity.extend({
 			unit.streamUpdateData([{aiEnabled: true }]);
 		}
 
-		self.pathFindingMethod = unit._stats.ai.pathFindingMethod; // options: simple/a* (coming soon)
+		self.pathFindingMethod = unit._stats.ai.pathFindingMethod; // options: simple/a*
 		self.idleBehaviour = unit._stats.ai.idleBehaviour; // options: wander/stay
 		self.sensorResponse = unit._stats.ai.sensorResponse; // options: none/flee/none (default)
 		self.attackResponse = unit._stats.ai.attackResponse; // options: fight/flee/none (default)
@@ -417,6 +417,13 @@ var AIComponent = TaroEntity.extend({
 			tempPath.pop(); // omit start tile, no need to step on it again as we are on it already
 			return tempPath;
 		}
+	},
+
+	setPathFindingMethod: function (pathFindingMethod) {
+		this.path = []; // clear the path
+		this.pathFindingMethod = (pathFindingMethod == 'a*') ? 'a*' : 'simple'; 
+		// currently we have two pathfinding method, use this to avoid invalid method
+		// if the given method is not valid, change it to simple (default)
 	},
 
 	setTargetUnit: function (unit) {
