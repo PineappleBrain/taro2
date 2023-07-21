@@ -15,7 +15,8 @@ var InventoryComponent = TaroEntity.extend({
 		// render inventory slots on client end
 		var entity = this._entity;
 		var ownerPlayer = entity.getOwner();
-		var mobileClass = taro.isMobile ? 'inventory-slot-mobile ' : 'inventory-slot ';
+		var slotMobileClass = taro.isMobile ? 'inventory-slot-mobile ' : 'inventory-slot ';
+		let strokeMobileClass = taro.isMobile ? 'item-key-stroke-mobile ' : 'item-key-stroke ';
 		if (ownerPlayer && taro.isClient && entity._stats.clientId === taro.network.id() && ownerPlayer._stats.selectedUnitId == entity.id()) {
 			$('#inventory-slots').html('');
 			$('#inventory-slots-key-stroke').html('');
@@ -23,7 +24,7 @@ var InventoryComponent = TaroEntity.extend({
 				$('#inventory-slots').append($('<div/>', {
 					id: `item-${i}`,
 					name: i,
-					class: `btn inventory-item-button p-0 ${mobileClass}`,
+					class: `btn inventory-item-button p-0 ${slotMobileClass}`,
 					role: 'button'
 				}).on('click', function () {
 					var slotIndex = parseInt($(this).attr('name')) + 1;
@@ -35,7 +36,7 @@ var InventoryComponent = TaroEntity.extend({
 				$('#inventory-slots-key-stroke').append($('<div/>', {
 					id: `item-key-stroke-${i}`,
 					name: `key-${i}`,
-					class: 'item-key-stroke'
+					class: `${strokeMobileClass}`
 				}));
 
 				var item = this.getItemBySlotNumber(i + 1);
@@ -430,18 +431,19 @@ var InventoryComponent = TaroEntity.extend({
 		// render inventory slots on client end
 		var entity = this._entity;
 		var ownerPlayer = entity.getOwner();
-		var mobileClass = taro.isMobile ? 'inventory-slot-mobile ' : 'inventory-slot ';
-		console.log(this._entity._stats.abilities);
+		let abilities = this._entity._stats.controls.abilities;
+		var slotMobileClass = taro.isMobile ? 'inventory-slot-mobile ' : 'inventory-slot ';
+		let strokeMobileClass = taro.isMobile ? 'item-key-stroke-mobile ' : 'item-key-stroke ';
 		if (ownerPlayer && taro.isClient && entity._stats.clientId === taro.network.id() && ownerPlayer._stats.selectedUnitId == entity.id()) {
 			$('#ability-slots').html('');
 			$('#ability-slots-key-stroke').html('');
 			let i = 0;
-			for (let el in this._entity._stats.abilities) {
+			for (let el in abilities) {
 				$('#ability-slots').append($('<div/>', {
 					id: `ability-${i}`,
 					name: i,
-					class: `btn inventory-item-button p-0 ${mobileClass}`,
-					ability: this._entity._stats.abilities[el],
+					class: `btn inventory-item-button p-0 ${slotMobileClass}`,
+					ability: abilities[el],
 					triggerKey: el,
 					role: 'button'
 				}).on('click', function () {
@@ -453,14 +455,14 @@ var InventoryComponent = TaroEntity.extend({
 				$('#ability-slots-key-stroke').append($('<div/>', {
 					id: `ability-key-stroke-${i}`,
 					name: `key-${i}`,
-					class: 'item-key-stroke'
+					class: `${strokeMobileClass}`
 				}));
 
 				// var item = this.getItemBySlotNumber(i + 1);
 				// if (item) {
 				// 	this.insertItem(item, i);
 				// }
-				this.insertAbility(this._entity._stats.abilities[el], i, el);
+				this.insertAbility(abilities[el], i, el);
 				i++;
 			}
 		}

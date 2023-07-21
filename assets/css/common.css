@@ -55,6 +55,7 @@ body {
     color: white;
     margin: 10px;
     position: absolute;
+    display: none;
 }
 
 .slot-group {
@@ -94,6 +95,13 @@ body {
     text-align: center;
 }
 
+.item-key-stroke-mobile {
+    width: 35px;
+    height: 20px;
+    display: inline-block;
+    text-align: center;
+}
+
 .inventory-slot,
 .trade-offer-slot {
     width: 45px;
@@ -111,6 +119,24 @@ body {
     width: 35px;
     height: 35px;
 }
+
+.inventory-item-button {
+    pointer-events: all;
+}
+
+.inventory-img {
+    height: 30px;
+    max-width: 30px;
+    object-fit: contain;
+}
+
+.inventory-img-mobile {
+    height: 38px;
+    max-width: 38px;
+    object-fit: contain;
+    border-radius: 0.25rem;
+}
+
 .popover {
     z-index: 10000;
 }
@@ -132,18 +158,16 @@ body {
 .swal2-container.swal2-shown {
     z-index: 100000;
 }
-.game-ui {
-    z-index: 1000;
-    color: white;
-    margin: 10px;
-    display: none;
-}
+
 .score-div {
     text-align: right;
 }
+
 #unit-status {
-    bottom: 10;
+    display: block;
+    bottom: 0.25rem;
     left: 50%;
+    pointer-events: none;
     transform: translateX(-50%);
 }
 .cursor-pointer {
