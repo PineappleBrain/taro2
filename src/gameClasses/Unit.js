@@ -332,6 +332,7 @@ var Unit = TaroEntityPhysics.extend({
 				if (newOwnerPlayer._stats.selectedUnitId == self.id() && taro.network.id() == self._stats.clientId) {
 					if (self.inventory) {
 						self.inventory.createInventorySlots();
+						self.inventory.createAbilitySlots();
 					}
 					if (self.unitUi) {
 						self.unitUi.updateAllAttributeBars();

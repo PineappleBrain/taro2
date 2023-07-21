@@ -57,6 +57,10 @@ body {
     position: absolute;
 }
 
+.slot-group {
+    display: inline-block;
+}
+
 .item-class-normal {
     color: black;
 }

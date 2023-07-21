@@ -422,6 +422,65 @@ var InventoryComponent = TaroEntity.extend({
 	getTotalInventorySize: function () {
 		this._entity._stats.backpackSize = (this._entity._stats.backpackSize > 0) ? this._entity._stats.backpackSize : 0; // backward compatibility incase backpackSize == undefined
 		return this._entity._stats.inventorySize + this._entity._stats.backpackSize;
+	},
+	
+	createAbilitySlots: function () {
+		console.log("ability slots are created");
+		// update inventory size and inventoy ids on client and server side
+		// render inventory slots on client end
+		var entity = this._entity;
+		var ownerPlayer = entity.getOwner();
+		var mobileClass = taro.isMobile ? 'inventory-slot-mobile ' : 'inventory-slot ';
+		console.log(this._entity._stats.abilities);
+		if (ownerPlayer && taro.isClient && entity._stats.clientId === taro.network.id() && ownerPlayer._stats.selectedUnitId == entity.id()) {
+			$('#ability-slots').html('');
+			$('#ability-slots-key-stroke').html('');
+			let i = 0;
+			for (let el in this._entity._stats.abilities) {
+				$('#ability-slots').append($('<div/>', {
+					id: `ability-${i}`,
+					name: i,
+					class: `btn inventory-item-button p-0 ${mobileClass}`,
+					ability: this._entity._stats.abilities[el],
+					triggerKey: el,
+					role: 'button'
+				}).on('click', function () {
+					if (taro.client.myPlayer) {
+						taro.client.myPlayer.control.keyDown('key', el);
+					}
+				}));
+
+				$('#ability-slots-key-stroke').append($('<div/>', {
+					id: `ability-key-stroke-${i}`,
+					name: `key-${i}`,
+					class: 'item-key-stroke'
+				}));
+
+				// var item = this.getItemBySlotNumber(i + 1);
+				// if (item) {
+				// 	this.insertItem(item, i);
+				// }
+				this.insertAbility(this._entity._stats.abilities[el], i, el);
+				i++;
+			}
+		}
+		// this.update();
+	},
+
+	insertAbility: function (ability, slotIndex, slotKey) {
+		var self = this;
+		if (ability) {
+			if (taro.isClient && self._entity._stats.clientId === taro.network.id()) {
+				var ownerPlayer = self._entity.getOwner();
+				if (ownerPlayer) {
+					if (ownerPlayer._stats.selectedUnitId == self._entity.id()) {
+						taro.unitUi.updateAbilitySlot(ability, slotIndex, slotKey);
+					}
+				}
+			}
+		}
+	
+		return slotIndex;
 	}
 
 });
