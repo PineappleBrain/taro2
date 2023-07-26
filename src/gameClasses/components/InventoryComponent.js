@@ -443,6 +443,7 @@ var InventoryComponent = TaroEntity.extend({
 					id: `ability-${i}`,
 					name: i,
 					class: `btn inventory-item-button p-0 ${slotMobileClass}`,
+					style: 'position: relative;',
 					ability: abilities[el],
 					triggerKey: el,
 					role: 'button'

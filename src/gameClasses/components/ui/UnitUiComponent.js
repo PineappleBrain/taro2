@@ -335,17 +335,34 @@ var UnitUiComponent = TaroEntity.extend({
 
 	updateAbilitySlot: function (ability, slotIndex, slotKey) {
 		$(`#ability-${slotIndex}`).html(
-			this.getAbilityDiv(ability, {
-				popover: 'top',
-				isDraggable: true,
-				isPurchasable: false
-			}, slotIndex)
+			this.getAbilityCooldownOverlay(slotIndex).add(
+				this.getAbilityDiv(ability, {
+					popover: 'top',
+					isDraggable: true,
+					isPurchasable: false
+				}, slotIndex)
+			)
 		);
 
 		$(`#ability-key-stroke-${slotIndex}`).html(
 			`<p class='m-0'><small style='font-weight:900;color: white;padding: 0px 5px;'>${slotKey.toUpperCase()}</small></p>`
 		);
-	}
+	},
+
+	getAbilityCooldownOverlay: function (slotIndex) {
+		let abilityCDDiv = $('<div/>', {
+			id: `ability-cooldown-overlay-${slotIndex}`,
+			class: 'ability-cooldown-overlay ',
+			style: 'position: absolute; bottom: 0; width: 100%; height: 0; background-color: #101010aa; z-index: 10001; pointer-events: none', /* higher than ability-div */
+		});
+		return abilityCDDiv;
+	},
+
+	// updateAbilityCooldownOverlay: function (ability) {
+	// 	let abilityStats = ability._stats;
+	// 	let cdPercent = Math.trunc((1 - Math.min((taro.now - abilityStats.lastUsed) / abilityStats.fireRate, 1)) * 100);
+	// 	$(`#ability-cooldown-overlay-${abilityStats.slotIndex}`).css('height', `${cdPercent}%`);
+	// },
 
 });
 
