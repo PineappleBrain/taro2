@@ -21,6 +21,10 @@ interface ScriptData {
 }
 
 interface ActionData {
+    player?: { 
+        variableName: string; 
+        function: string; 
+    };
     disabled?: boolean;
     unitType?: string;
     itemType?: string;
@@ -37,6 +41,8 @@ interface ActionData {
 	angle?: number;
 	width?: number;
 	height?: number;
+    wasEdited?: boolean;
+    wasDeleted?: boolean;
 }
 
 interface MapData {
@@ -77,6 +83,7 @@ declare class GameComponent extends TaroEntity {
 		unitTypes: Record<string, EntityData>;
 		projectileTypes: Record<string, EntityData>;
 		itemTypes: Record<string, EntityData>;
+		particleTypes: Record<string, ParticleData>;
 		settings: {
 			addStrokeToNameAndAttributes: boolean;
 			camera: {

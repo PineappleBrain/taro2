@@ -94,7 +94,7 @@ var ServerNetworkEvents = {
 		// assign _id and sessionID to the new client
 		var client = taro.server.clients[clientId];
 		var socket = taro.network._socketById[clientId];
-
+		
 		if (!socket) {
 			try {
 				global.rollbar.log('No socket found with this clientId',
@@ -107,9 +107,8 @@ var ServerNetworkEvents = {
 			}
 			return;
 		}
-
 		// check joining user is same as token user.
-		else if (socket._token.userId !== data._id || socket._token.sessionId !== data.sessionId) {
+		else if ((socket._token.userId && socket._token.userId !== data._id) || (socket._token.sessionId && socket._token.sessionId !== data.sessionId)) {
 			console.log('Unauthenticated user joining the game (ServerNetworkEvent.js)');
 			socket.close('Unauthenticated user joining the game');
 			return;
@@ -171,7 +170,7 @@ var ServerNetworkEvents = {
 				console.log('Client already exists. Kicking the existing player ' + player._stats.clientId + ' (' + player._stats.name + ')');
 				player.updatePlayerHighscore();
 				var oldPlayerClientId = player._stats.clientId;
-				taro.network.send('clientDisconnect', { reason: 'Player disconnected', clientId: oldPlayerClientId });
+				taro.network.send('clientDisconnect', { reason: 'User connected to another server.', clientId: oldPlayerClientId });
 
 				if (taro.server.clients[oldPlayerClientId] && taro.server.clients[oldPlayerClientId]._id) {
 					taro.clusterClient.emit('clientDisconnect', taro.server.clients[oldPlayerClientId]._id);
@@ -710,8 +709,7 @@ var ServerNetworkEvents = {
 		var player = taro.game.getPlayerByClientId(clientId);
 		if (player) {
 			var unit = player.getSelectedUnit();
-			// prevent taking mouse input if mouse cursor is right above the selected unit
-			if (unit && (Math.abs(position[0]) > 20 || Math.abs(position[1]) > 20)) {
+			if (unit) {
 				player.control.input.mouse.x = position[0];
 				player.control.input.mouse.y = position[1];
 			}

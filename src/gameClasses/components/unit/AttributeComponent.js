@@ -187,14 +187,12 @@ var AttributeComponent = TaroEntity.extend({
 	},
 	// change attribute's value manually
 	update: function (attributeTypeId, newValue, forceUpdate) {
-
 		var self = this;
 		if (!self._entity._stats || !self._entity._stats.attributes) {
 			return;
 		}
 
 		var attributes = JSON.parse(JSON.stringify(self._entity._stats.attributes)); // clone units existing attribute values
-
 		if (attributes) {
 			var attribute = attributes[attributeTypeId];
 			if (attribute) {
@@ -224,6 +222,9 @@ var AttributeComponent = TaroEntity.extend({
 							let attrData = { attributes: {} };
 							attrData.attributes[attributeTypeId] = newValue;
 							self._entity.streamUpdateData([attrData]);
+
+
+
 						}
 
 						var triggeredBy = { attribute: attribute };
@@ -271,14 +272,14 @@ var AttributeComponent = TaroEntity.extend({
 
 								// console.log(attribute, attribute.value);
 								if (taro.client.myPlayer._stats.selectedUnitId == unit.id()) {
-									self._entity.unitUi.updateAttributeBar({...attribute, ...{value: parseFloat(newValue)}});
+									self._entity.unitUi.updateAttributeBar({ ...attribute, ...{ value: parseFloat(newValue) } });
 								}
 
 								// this is the only way to convert to number i guess??
 								// all of the old implementations pass a value as a string here
 								// even if we call attribute.value = parseFloat(attribute.value)
 								// or other variations of this
-								self._entity.updateAttributeBar({...attribute, ...{value: parseFloat(newValue)}});
+								self._entity.updateAttributeBar({ ...attribute, ...{ value: parseFloat(newValue) } });
 								break;
 							}
 							case 'item': {

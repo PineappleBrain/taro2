@@ -49,11 +49,16 @@ var DevModeScene = /** @class */ (function (_super) {
             _this.regionEditor.edit(data);
         });
         taro.client.on('editInitEntity', function (data) {
+            var found = false;
             _this.entityImages.forEach(function (image) {
                 if (image.entity.action.actionId === data.actionId) {
+                    found = true;
                     image.entity.update(data);
                 }
             });
+            if (!found) {
+                _this.createEntityImage(data);
+            }
         });
         taro.client.on('updateInitEntities', function () {
             _this.updateInitEntities();
@@ -99,6 +104,7 @@ var DevModeScene = /** @class */ (function (_super) {
             this.load.image(key, this.patchAssetUrl(tileset.image));
         });*/
         this.load.image('cursor', 'https://cache.modd.io/asset/spriteImage/1666276041347_cursor.png');
+        this.load.image('entity', 'https://cache.modd.io/asset/spriteImage/1686840222943_cube.png');
         this.load.image('region', 'https://cache.modd.io/asset/spriteImage/1666882309997_region.png');
         this.load.image('stamp', 'https://cache.modd.io/asset/spriteImage/1666724706664_stamp.png');
         this.load.image('eraser', 'https://cache.modd.io/asset/spriteImage/1666276083246_erasergap.png');
@@ -107,6 +113,8 @@ var DevModeScene = /** @class */ (function (_super) {
         this.load.image('fill', 'https://cache.modd.io/asset/spriteImage/1675428550006_fill_(1).png');
         this.load.image('clear', 'https://cache.modd.io/asset/spriteImage/1681917489086_layerClear.png');
         this.load.image('save', 'https://cache.modd.io/asset/spriteImage/1681916834218_saveIcon.png');
+        this.load.image('redo', 'https://cache.modd.io/asset/spriteImage/1686899810953_redo.png');
+        this.load.image('undo', 'https://cache.modd.io/asset/spriteImage/1686899853748_undo.png');
         this.load.scenePlugin('rexuiplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js', 
         //'src/renderer/phaser/rexuiplugin.min.js',
         'rexUI', 'rexUI');
@@ -165,6 +173,9 @@ var DevModeScene = /** @class */ (function (_super) {
     DevModeScene.prototype.leaveMapTab = function () {
         if (this.devModeTools)
             this.devModeTools.leaveMapTab();
+        if (this.devModeTools.entityEditor.selectedEntityImage) {
+            this.devModeTools.entityEditor.selectEntityImage(null);
+        }
         this.entityImages.forEach(function (image) {
             image.setVisible(false);
         });
@@ -215,7 +226,7 @@ var DevModeScene = /** @class */ (function (_super) {
             }
         }
     };
-    DevModeScene.prototype.pointerInsideMap = function (pointerX, pointerY, map) {
+    DevModeScene.pointerInsideMap = function (pointerX, pointerY, map) {
         return (0 <= pointerX && pointerX < map.width
             && 0 <= pointerY && pointerY < map.height);
     };
@@ -242,13 +253,22 @@ var DevModeScene = /** @class */ (function (_super) {
     DevModeScene.prototype.update = function () {
         if (this.tileEditor)
             this.tileEditor.update();
+        if (this.devModeTools.entityEditor)
+            this.devModeTools.entityEditor.update();
     };
     DevModeScene.prototype.updateInitEntities = function () {
-        this.entityImages.forEach(function (image) {
-            taro.developerMode.initEntities.forEach(function (action) {
-                if (image.entity.action.actionId === action.actionId)
+        var _this = this;
+        taro.developerMode.initEntities.forEach(function (action) {
+            var found = false;
+            _this.entityImages.forEach(function (image) {
+                if (image.entity.action.actionId === action.actionId) {
+                    found = true;
                     image.entity.update(action);
+                }
             });
+            if (!found) {
+                _this.createEntityImage(action);
+            }
         });
     };
     return DevModeScene;
