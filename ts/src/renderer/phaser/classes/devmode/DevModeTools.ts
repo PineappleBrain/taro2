@@ -30,9 +30,6 @@ class DevModeTools extends Phaser.GameObjects.Container {
 	altKey: Phaser.Input.Keyboard.Key;
 	shiftKey: Phaser.Input.Keyboard.Key;
 
-	outline: Phaser.GameObjects.Graphics;
-	activeEntityPlacement: boolean;
-
 	constructor(
 		public scene: DevModeScene,
 	) {
@@ -66,8 +63,8 @@ class DevModeTools extends Phaser.GameObjects.Container {
 
 		this.scene.scale.on(Phaser.Scale.Events.RESIZE, () => {
 			toolButtonsContainer.height = (h + s) * 13;
-			if (toolButtonsContainer.height > this.scene.sys.game.canvas.height * 0.5) {
-				toolButtonsContainer.scale = (this.scene.sys.game.canvas.height * 0.5) / toolButtonsContainer.height;
+			if (toolButtonsContainer.height > window.innerHeight * 0.5) {
+				toolButtonsContainer.scale = (window.innerHeight * 0.5) / toolButtonsContainer.height;
 			}
 			toolButtonsContainer.x = palette.camera.x + palette.paletteWidth - ((h * 4) * toolButtonsContainer.scale) + 22;
 			toolButtonsContainer.y = palette.camera.y - (toolButtonsContainer.height * toolButtonsContainer.scale);
@@ -78,8 +75,8 @@ class DevModeTools extends Phaser.GameObjects.Container {
 
 		const toolButtonsContainer = this.toolButtonsContainer = new Phaser.GameObjects.Container(scene);
 		toolButtonsContainer.height = (h + s) * 13;
-		if (toolButtonsContainer.height > this.scene.sys.game.canvas.height * 0.5) {
-			toolButtonsContainer.scale = (this.scene.sys.game.canvas.height * 0.5) / toolButtonsContainer.height;
+		if (toolButtonsContainer.height > window.innerHeight * 0.5) {
+			toolButtonsContainer.scale = (window.innerHeight * 0.5) / toolButtonsContainer.height;
 		}
 		toolButtonsContainer.x = palette.camera.x + palette.paletteWidth - ((h * 4) * toolButtonsContainer.scale) + 22;
 		toolButtonsContainer.y = palette.camera.y - (toolButtonsContainer.height * toolButtonsContainer.scale);
@@ -152,8 +149,6 @@ class DevModeTools extends Phaser.GameObjects.Container {
 				camera.scrollY -= scrollY;
 			}
 		});
-
-		this.outline = scene.gameScene.add.graphics();
 	}
 
 	updateBrushArea(): void {
@@ -275,6 +270,12 @@ class DevModeTools extends Phaser.GameObjects.Container {
 		sKey.on('down', () => {
 			if (!this.checkIfInputModalPresent() && taro.developerMode.active && taro.developerMode.activeTab === 'map') {
 				this.save();
+			}
+		});
+        const aKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false);
+		aKey.on('down', () => {
+			if (!this.checkIfInputModalPresent() && taro.developerMode.active && taro.developerMode.activeTab === 'map') {
+				this.addEntities();
 			}
 		});
 		const oneKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE, false);
@@ -410,7 +411,8 @@ class DevModeTools extends Phaser.GameObjects.Container {
 		//this.tileEditor.clearLayer(gameMap.currentLayerIndex, false);
 		const data: TileData<'clear'> = {
 			clear: {
-				layer: gameMap.currentLayerIndex
+				layer: gameMap.currentLayerIndex,
+				layerName: this.layerButtons[gameMap.currentLayerIndex].name
 			}
 		};
 		inGameEditor.showClearLayerConfirmation(data);

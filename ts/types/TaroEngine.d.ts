@@ -1,6 +1,6 @@
 declare class TaroEngine extends TaroClass {
-    newIdHex(): any;
-
+	profiler: any;
+	newIdHex(): any;
 	tiled: any;
 	regionManager: any;
 	showRegionList: any;
@@ -50,25 +50,27 @@ declare class TaroEngine extends TaroClass {
 		originalTileWidth: number;
 	};
 
-	lastTickTime: number;
-
 	entitiesToRender: EntitiesToRender;
 	triggersQueued: any[];
 
 	constructor(options: object);
 
-	createFrontBuffer (autoSize: boolean, dontScale?: boolean): void
-	engineStep (): void;
+	createFrontBuffer(autoSize: boolean, dontScale?: boolean): void
+	engineStep(currentTime: number, ctx: number): void;
 
 	physics: {
+		_box2dDebug: any;
 		staticsFromMap(walls: any): unknown;
 		destroyWalls(): unknown;
 		world(): any;
-		engine: string;
-		_scaleRatio: number
+		enableDebug(flags: number): void;
+		disableDebug(): void;
+		engine: 'BOX2DWASM' | 'BOX2DWEB' | 'PLANCK';
+		box2D?: typeof Box2D & EmscriptenModule
+		_scaleRatio: number;
 	};
 
-	$ (item: number | string | object): any;
+	$(item: number | string | object): any;
 	$$(item: number | string | object): any;
 
 	menuUi: MenuUiComponent;

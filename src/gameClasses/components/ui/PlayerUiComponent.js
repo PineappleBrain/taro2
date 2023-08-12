@@ -14,6 +14,10 @@ var PlayerUiComponent = TaroEntity.extend({
 			message: null,
 			messagePrinter: null
 		};
+
+		self.playerAttributeDivElement = null;
+
+		self.moddItemShopModalElement = null;
 	},
 
 	setupListeners: function () {
@@ -33,10 +37,12 @@ var PlayerUiComponent = TaroEntity.extend({
 
 		$('#custom-modal').on('hidden.bs.modal', function () {
 			$('#custom-modal').removeClass('d-flex');
+			taro.client.myPlayer.control.updatePlayerInputStatus();
 		});
 
 		$('#custom-modal').on('shown.bs.modal', function () {
 			$('#custom-modal-cancel').focus();
+			taro.client.myPlayer.control.updatePlayerInputStatus();
 		});
 
 		$('#player-input-modal').on('shown.bs.modal', function () {
@@ -45,25 +51,33 @@ var PlayerUiComponent = TaroEntity.extend({
 			} else {
 				$('#player-input-field').focus();
 			}
+			taro.client.myPlayer.control.updatePlayerInputStatus();
 		});
 
 		$('button#player-input-submit').on('click', function () {
 			self.lastInputValue = $('#player-input-field').val();
 			self.pressedButton = true;
 			$('#player-input-modal').modal('hide');
+			taro.client.myPlayer.control.updatePlayerInputStatus();
 		});
 
 		$('button#player-input-cancel').on('click', function () {
 			self.pressedButton = false;
 			taro.network.send('playerCustomInput', { status: 'cancelled' });
 			$('#player-input-modal').modal('hide');
+			taro.client.myPlayer.control.updatePlayerInputStatus();
 		});
 	},
 
 	updatePlayerAttributesDiv: function (attributes) {
 		var self = this;
 
-		$('#players-attribute-div').html('');
+		self.playerAttributeDivElement = taro.client.getCachedElement('#players-attribute-div');
+
+		if (self.playerAttributeDivElement) {
+			self.playerAttributeDivElement.textContent = '';
+		}
+
 		var attributeTypes = taro.game.data.attributeTypes;
 
 		if (attributeTypes == undefined)
@@ -85,7 +99,7 @@ var PlayerUiComponent = TaroEntity.extend({
 				var attrValue = $('<span/>', {
 					class: `pt-attribute-value-${attrKey}`
 				});
-				$('#players-attribute-div').append(
+				$(self.playerAttributeDivElement).append(
 					attrName
 				).append(
 					attrValue
@@ -108,13 +122,19 @@ var PlayerUiComponent = TaroEntity.extend({
 					}
 				}
 
-				var value = attr.value && attr.value.toLocaleString('en-US') || 0;
+				// var value = attr.value && attr.value.toLocaleString('en-US') || 0; // commented out because toLocaleString is costly
+				var value = attr.value || 0;
 				attrValue.text(value);
 			}
 		}
 
 		// update shop as player points are changed and when shop modal is open
-		if ($('#modd-item-shop-modal').hasClass('show')) {
+
+		if (!self.moddItemShopModalElement) {
+			self.moddItemShopModalElement = taro.client.getCachedElement('#modd-item-shop-modal');
+		}
+
+		if (self.moddItemShopModalElement && self.moddItemShopModalElement.classList.contains('show')) {
 			taro.shop.openItemShop();
 		}
 	},
@@ -135,7 +155,7 @@ var PlayerUiComponent = TaroEntity.extend({
 		var self = this;
 		config.isDismissible = config.isDismissible === undefined ? true : !!(config.isDismissible);
 		self.isDismissibleInputModalShown = config.isDismissible;
-		$('#player-input-field-label').html(window.DOMPurify.sanitize(config.fieldLabel || 'Field'));
+		$('#player-input-field-label').html(window.DOMPurify?.sanitize(config.fieldLabel || 'Field'));
 
 		$('#player-input-field').val('');
 		$('#player-input-modal').addClass('d-flex');
@@ -153,7 +173,7 @@ var PlayerUiComponent = TaroEntity.extend({
 		}
 
 		$('#player-input-modal').modal('show');
-
+		taro.client.myPlayer.control.updatePlayerInputStatus();
 		self.pressedButton = false;
 	},
 
@@ -263,7 +283,7 @@ var PlayerUiComponent = TaroEntity.extend({
 
 		function getDialogueInstance (dialogue) {
 			var playerName = extraData && extraData.playerName;
-			dialogue = JSON.parse(JSON.stringify(dialogue));
+			dialogue = rfdc()(dialogue);
 
 			if (dialogue.message.indexOf('%PLAYER_NAME%') > -1 && playerName) {
 				dialogue.message = dialogue.message.replace(/%PLAYER_NAME%/g, playerName);
@@ -373,7 +393,7 @@ var PlayerUiComponent = TaroEntity.extend({
 		}
 
 		function keyboardListener (e) {
-			if (e.keyCode === 13 || e.keyCode === 32) {
+			if (e.keyCode === 32) {
 				e.stopPropagation();
 				skipText();
 			}
