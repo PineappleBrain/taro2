@@ -9,6 +9,7 @@ var AIComponent = TaroEntity.extend({
 		self.targetPosition = undefined;
 		self.unitsTargetingMe = []; // unit IDs of units attacking/fleeing away from this unit
 		self.debugEnabled = true;
+		//self.addComponent(AStarPathfindingComponent);
 
 		// A* algorithm variables
 		self.path = []; // AI unit will keep going to highest index until there is no more node to go
