@@ -1,5 +1,8 @@
 declare class TaroEngine extends TaroClass {
 	profiler: any;
+	script: any;
+	clearLayer: (payload: TileData<"clear">) => void;
+
 	newIdHex(): any;
 	tiled: any;
 	regionManager: any;
@@ -8,7 +11,9 @@ declare class TaroEngine extends TaroClass {
 	map: any;
 	scaleMap(data: any): void;
 
+	fps(): number;
 	_renderFrames: number;
+	_renderFPS: number;
 	_tickStart: number;
 
 	_currentTime: number;
@@ -37,6 +42,7 @@ declare class TaroEngine extends TaroClass {
 	renderer: PhaserRenderer;
 
 	developerMode: DeveloperMode;
+	mapEditorUI: MapEditorUI;
 
 	scaleMapDetails: {
 		scaleFactor: {
@@ -66,6 +72,11 @@ declare class TaroEngine extends TaroClass {
 		enableDebug(flags: number): void;
 		disableDebug(): void;
 		engine: 'BOX2DWASM' | 'BOX2DWEB' | 'PLANCK';
+		metaData: any;
+		getPointer?: (...args: any) => any;
+		recordLeak?: (...args: any) => any;
+		tryRecordLeak?: (...args: any) => any;
+		destroyB2dObj?: (...args: any) => any;
 		box2D?: typeof Box2D & EmscriptenModule
 		_scaleRatio: number;
 	};

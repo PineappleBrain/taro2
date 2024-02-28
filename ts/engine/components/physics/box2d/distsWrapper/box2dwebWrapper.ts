@@ -60,6 +60,12 @@ const box2dwebWrapper: PhysicsDistProps = {
 		component.b2Body.prototype.getWorldCenter = component.b2Body.prototype.GetWorldCenter;
 		component.b2Body.prototype.applyForce = component.b2Body.prototype.ApplyForce;
 		component.b2Vec2.prototype.set = component.b2Vec2.prototype.Set;
+		component.b2Vec2.prototype.get_x = function () {
+			return this.x;
+		};
+		component.b2Vec2.prototype.get_y = function () {
+			return this.y;
+		};
 		// component.b2Vec2.prototype.setV = component.b2Vec2.prototype.SetV;
 
 		component.b2Joint.prototype.getNext = component.b2Joint.prototype.GetNext;
@@ -362,7 +368,7 @@ const box2dwebWrapper: PhysicsDistProps = {
 
 			var joint = self._world.CreateJoint(joint_def); // joint between two pieces
 
-			// var serverStats = taro.server.getStatus()
+			// var serverStats = taro.status.getSummary()
 			PhysicsComponent.prototype.log('joint created ', aBody.jointType);
 
 			entityA.jointsAttached[entityB.id()] = joint;

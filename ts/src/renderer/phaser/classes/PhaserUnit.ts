@@ -6,8 +6,10 @@ class PhaserUnit extends PhaserAnimatedEntity {
 	private chat: PhaserChatBubble;
 	label: Phaser.GameObjects.Text;
 
-
 	gameObject: Phaser.GameObjects.Container & IRenderProps;
+	debugGameObject: Phaser.GameObjects.Rectangle & IRenderProps;
+	debugGameObjectBlue: Phaser.GameObjects.Rectangle & IRenderProps;
+	debugGameObjectRed: Phaser.GameObjects.Rectangle & IRenderProps;
 	attributes: PhaserAttributeBar[] = [];
 	attributesContainer: Phaser.GameObjects.Container;
 
@@ -43,6 +45,7 @@ class PhaserUnit extends PhaserAnimatedEntity {
 			'render-attributes': entity.on('render-attributes', this.renderAttributes, this),
 			'update-attribute': entity.on('update-attribute', this.updateAttribute, this),
 			'render-chat-bubble': entity.on('render-chat-bubble', this.renderChat, this),
+			'transform-debug': entity.on('transform-debug', this.transformDebug, this),
 		});
 
 		this.scene.unitsList.push(this);
@@ -80,6 +83,42 @@ class PhaserUnit extends PhaserAnimatedEntity {
 				this.setTexture(this.key);
 				const bounds = this.entity._bounds2d;
 				this.sprite.setDisplaySize(bounds.x, bounds.y);
+			}
+
+			// GameScene's load entity doesn't create sprite sheets so we have horrible
+			// errors when we try to create animations
+			if (this.sprite.texture.frameTotal === 1 || this.sprite.texture.key === 'pack-result') {
+				return;
+			}
+
+			for (let animationsKey in this.entity._stats.animations) {
+
+				const animation = this.entity._stats.animations[animationsKey];
+				const frames = animation.frames;
+				const animationFrames: number[] = [];
+
+				for (let i = 0; i < frames.length; i++) {
+					// correction for 0-based indexing
+					animationFrames.push(frames[i] - 1);
+				}
+
+				if (animationFrames.length === 0) {
+					// avoid crash by giving it frame 0 if no frame data provided
+					animationFrames.push(0);
+				}
+				const anims = this.scene.anims;
+				if (anims.exists(`${this.key}/${animationsKey}`)) {
+					anims.remove(`${this.key}/${animationsKey}`);
+				}
+
+				anims.create({
+					key: `${this.key}/${animationsKey}`,
+					frames: anims.generateFrameNumbers(this.key, {
+						frames: animationFrames
+					}),
+					frameRate: animation.framesPerSecond || 15,
+					repeat: (animation.loopCount - 1) // correction for loop/repeat values
+				});
 			}
 		} else if (data === 'using_skin') {
 			this.sprite.anims.stop();
@@ -193,8 +232,8 @@ class PhaserUnit extends PhaserAnimatedEntity {
 		this.scene.cameraTarget = this.gameObject;
 		if (!taro.developerMode.active || taro.developerMode.activeTab === 'play') {
 			let trackingDelay = taro?.game?.data?.settings?.camera?.trackingDelay || 3;
-			trackingDelay = trackingDelay / 60;
-			camera.startFollow(this.gameObject, false, trackingDelay, trackingDelay);
+			trackingDelay = trackingDelay / taro.fps();
+			camera.startFollow(this.gameObject, true, trackingDelay, trackingDelay);
 		}
 	}
 
@@ -239,6 +278,7 @@ class PhaserUnit extends PhaserAnimatedEntity {
 		color?: string;
 	}): void {
 		const label = this.getLabel();
+
 		//const rt = this.rtLabel;
 
 		//label.visible = !rt;
@@ -257,7 +297,8 @@ class PhaserUnit extends PhaserAnimatedEntity {
 		label.setFontFamily('Verdana');
 		label.setFontSize(16);
 		label.setFontStyle(data.bold ? 'bold' : 'normal');
-		label.setFill(data.color || '#fff');
+
+		label.setFill(`${data.color}` || '#fff');
 		if (this.scene.renderer.type !== Phaser.CANVAS) label.setResolution(4);
 
 		const strokeThickness = taro.game.data.settings
@@ -304,12 +345,13 @@ class PhaserUnit extends PhaserAnimatedEntity {
 		color?: string;
 	}): void {
 		const offset = -25 - Math.max(this.sprite.displayHeight, this.sprite.displayWidth) / 2;
-		new PhaserFloatingText(this.scene, {
+		const fadingText = new PhaserFloatingText(this.scene, {
 			text: data.text || '',
-			x: this.gameObject.x,
-			y: this.gameObject.y + offset,
+			x: 0,
+			y: offset,
 			color: data.color || '#fff'
 		});
+		this.gameObject.add(fadingText);
 	}
 
 	private getAttributesContainer(): Phaser.GameObjects.Container {
@@ -369,6 +411,7 @@ class PhaserUnit extends PhaserAnimatedEntity {
 			a = PhaserAttributeBar.get(this);
 			attributes.push(a);
 		}
+
 		a.render(data.attr);
 	}
 
@@ -420,6 +463,39 @@ class PhaserUnit extends PhaserAnimatedEntity {
 				this.scaleTween = null;
 			}
 		});
+	}
+
+	protected transformDebug (data: {
+		debug: string;
+		x: number;
+		y: number;
+		rotation: number
+	}): void {
+		if (data.debug === 'green-square') {
+			if (!this.debugGameObject) {
+				const bounds = this.entity._bounds2d;
+				this.debugGameObject = this.scene.add.rectangle(0, 0, bounds.x, bounds.y) as Phaser.GameObjects.Rectangle & IRenderProps;
+				this.debugGameObject.setStrokeStyle(2, 0x008000);
+			}
+			this.debugGameObject.setPosition(data.x, data.y);
+			this.debugGameObject.rotation = data.rotation;
+		} else if (data.debug === 'blue-square') {
+			if (!this.debugGameObjectBlue) {
+				const bounds = this.entity._bounds2d;
+				this.debugGameObjectBlue = this.scene.add.rectangle(0, 0, bounds.x, bounds.y) as Phaser.GameObjects.Rectangle & IRenderProps;
+				this.debugGameObjectBlue.setStrokeStyle(2, 0x0000FF);
+			}
+			this.debugGameObjectBlue.setPosition(data.x, data.y);
+			this.debugGameObjectBlue.rotation = data.rotation;
+		} else if (data.debug === 'red-square') {
+			if (!this.debugGameObjectRed) {
+				const bounds = this.entity._bounds2d;
+				this.debugGameObjectRed = this.scene.add.rectangle(0, 0, bounds.x, bounds.y) as Phaser.GameObjects.Rectangle & IRenderProps;
+				this.debugGameObjectRed.setStrokeStyle(2, 0xFF0000);
+			}
+			this.debugGameObjectRed.setPosition(data.x, data.y);
+			this.debugGameObjectRed.rotation = data.rotation;
+		}
 	}
 
 	protected destroy(): void {

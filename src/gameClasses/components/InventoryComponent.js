@@ -24,6 +24,7 @@ var InventoryComponent = TaroEntity.extend({
 					id: `item-${i}`,
 					name: i,
 					class: `btn inventory-item-button p-0 ${mobileClass}`,
+					style: 'position: relative;',
 					role: 'button'
 				}).on('click', function () {
 					var slotIndex = parseInt($(this).attr('name')) + 1;
@@ -203,7 +204,7 @@ var InventoryComponent = TaroEntity.extend({
 
 		// check if this item can be merged with an existing item in the inventory
 		var totalInventorySize = this.getTotalInventorySize();
-		if (itemData.controls == undefined || (itemData.controls.canMerge || itemData.controls.canMerge == undefined || itemData.controls.canMerge)) { // Check if the item can merge
+		if (itemData.controls?.canMerge != false) { // Check if the item can merge
 			var quantity = itemData.quantity;
 			for (var i = 0; i < totalInventorySize; i++) {
 				var itemId = self._entity._stats.itemIds[i];
@@ -285,11 +286,11 @@ var InventoryComponent = TaroEntity.extend({
 					}
 				}
 			}
-
-			taro.queueTrigger('unitPickedAnItem', {
-				unitId: unit.id(),
-				itemId: item.id()
-			});
+			const triggerParams = { unitId: unit.id(), itemId: item.id() };
+			//we cant use queueTrigger here because it will be called after entity scripts and item or unit probably no longer exists
+			item.script.trigger('thisItemIsPickedUp', triggerParams); // this entity (item)
+			unit.script.trigger('thisUnitPickedUpAnItem', triggerParams); // this entity (unit)
+			taro.script.trigger('unitPickedAnItem', triggerParams); // unit picked item (need to rename rename 'unitPickedAnItem' -> 'unitPickedUpAnItem')
 		}
 
 		return slotIndex;
@@ -332,7 +333,7 @@ var InventoryComponent = TaroEntity.extend({
 			unit.streamUpdateData([{ itemIds: unit._stats.itemIds }]);
 		} else if (taro.isClient) {
 			if (taro.client.myPlayer && taro.client.myPlayer._stats.selectedUnitId == unit.id() && itemExistInItemIds) {
-				$(taro.client.getCachedElement(`#item-${slotIndex}`)).html('');
+				$(taro.client.getCachedElementById(`item-${slotIndex}`)).html('');
 				taro.itemUi.updateItemSlot(item, slotIndex);
 			}
 		}
@@ -370,7 +371,7 @@ var InventoryComponent = TaroEntity.extend({
 		if (taro.isClient && this._entity._stats.clientId === taro.network.id()) {
 			var ownerPlayer = this._entity.getOwner();
 			if (ownerPlayer && ownerPlayer._stats.selectedUnitId == this._entity.id()) {
-				$(taro.client.getCachedElement('.popover')).popover('hide');
+				$('.popover').popover('hide');
 
 				// highlight currently selected item slots
 				// 5 for trading items
@@ -379,27 +380,8 @@ var InventoryComponent = TaroEntity.extend({
 				for (var slotIndex = 0; slotIndex < totalInventorySize + 5; slotIndex++) { // +5 for trade slots?
 					var itemId = this._entity._stats.itemIds[slotIndex];
 					var item = taro.$(itemId);
-					// if (item) {
-					// 	item._stats.slotIndex = slotIndex;
-					// 	if (slotIndex == this._entity._stats.currentItemIndex) {
-					// 		item.setState('selected');
-					// 	} else {
-					// 		item.setState('unselected');
-					// 	}
-					// }
-					if (item && item._stats && item._stats.inventorySlotColor) {
-						$(taro.client.getCachedElement(`#item-${slotIndex}`)).css('background-image', `radial-gradient(rgba(0, 0, 0, 0),${  item._stats.inventorySlotColor  })`);
-					} else {
-						$(taro.client.getCachedElement(`#item-${slotIndex}`)).css('background-image', 'none');
-					}
+					
 					taro.itemUi.updateItemSlot(item, slotIndex);
-
-					// highlight currently selected inventory item (using currentItemIndex)
-					if (this._entity._stats.currentItemIndex != undefined && this._entity._stats.currentItemIndex == slotIndex) {
-						$(taro.client.getCachedElement(`#item-${slotIndex}`)).addClass('active');
-					} else {
-						$(taro.client.getCachedElement(`#item-${slotIndex}`)).removeClass('active');
-					}
 				}
 
 				// this.updateBackpackButton()
@@ -412,9 +394,9 @@ var InventoryComponent = TaroEntity.extend({
 		for (var i = 0; i < this._entity._stats.inventorySize; i++) {
 			// highlight currently selected inventory item (using currentItemIndex)
 			if (slotIndex > 0 && slotIndex - 1 == i) {
-				$(taro.client.getCachedElement(`#item-${i}`)).addClass('active');
+				$(taro.client.getCachedElementById(`item-${i}`)).addClass('active');
 			} else {
-				$(taro.client.getCachedElement(`#item-${i}`)).removeClass('active');
+				$(taro.client.getCachedElementById(`item-${i}`)).removeClass('active');
 			}
 		}
 	},

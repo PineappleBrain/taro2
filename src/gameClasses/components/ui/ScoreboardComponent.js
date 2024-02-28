@@ -4,13 +4,9 @@ var ScoreboardComponent = TaroEntity.extend({
 
 	init: function () {
 		var self = this;
-		// self.scoreAttributeId = taro.game.data.settings.scoreBoard
-		// console.log("taro.game.data.settings", taro.game.data.settings)
 		self.scoreAttributeId = taro.game.data.settings.scoreAttributeId;
+		self.isUpdateQueued = false;
 		self._hidden = false;
-
-		self.scoreboardElement = null;
-		self.leaderboardToggleElement = null;
 
 		self.setUI();
 	},
@@ -113,6 +109,10 @@ var ScoreboardComponent = TaroEntity.extend({
 		// });
 	},
 
+	queueUpdate: function() {
+		this.isUpdateQueued = true;
+	},
+
 	convertNumbersToKMB: function (labelValue) {
 		if (taro.game.data.settings.prettifyingScoreboard) {
 			// Nine Zeroes for Billions
@@ -137,106 +137,112 @@ var ScoreboardComponent = TaroEntity.extend({
 		var self = this;
 		var DEFAULT_COLOR = 'white';
 
-		if (taro.isClient) {
-			var scoreboard = '';
-			var sortedScores = [];
-			var players = taro.$$('player');
-			var topPlayersToShow = taro.isMobile ? 3 : 10;
+		var scoreboardElement = taro.client.getCachedElementById('scoreboard');
+		var leaderboardToggleElement = taro.client.getCachedElementById('leaderboard-toggle');
 
-			players.forEach(function (player) {
-				if (player._stats && (
-					// only display human players on scoreboard
-					player._stats.controlledBy == 'human'
-				)
-				) {
-					var playerId = player.id();
-					var score = 0;
-					if (self.scoreAttributeId && player._stats.attributes && player._stats.attributes[self.scoreAttributeId]) {
-						var playerAttribute = player._stats.attributes[self.scoreAttributeId];
-						score = playerAttribute.value;
-						var decimalPlace = parseInt(playerAttribute.decimalPlaces) || 0;
-						var score = parseFloat(playerAttribute.value).toFixed(decimalPlace);
-					}
 
-					sortedScores.push({
-						key: playerId,
-						value: score
-					});
-				}
-			});
+		if (taro.isClient && scoreboardElement && leaderboardToggleElement) {
 
-			sortedScores.sort(function (a, b) {
-				return a.value - b.value;
-			});
-
-			for (var i = sortedScores.length - 1; i >= 0; i--) {
-				var playerId = sortedScores[i].key;
-				var player = taro.$(playerId);
-				var defaultFontWeight = 500;
-				if (player) {
-					var color = null; // color to indicate human, animal, or my player on scoreboard
-					let playerIsSelf = '';
-
-					var playerType = taro.game.cloneAsset('playerTypes', player._stats.playerTypeId);
-
-					if (playerType && playerType.color) {
-						color = playerType.color;
-					}
-
-					// highlight myself (player) on leaderboard
-					if (player._stats.controlledBy == 'human' && player._stats.clientId == taro.network.id()) {
-						defaultFontWeight = 800;
-						color = '#99FF00';
-						playerIsSelf = 'scoreboard-player-is-myself';
-					}
-
-					var readableName = player._stats.name || '';
-
-					readableName = readableName.replace(/</g, '&lt;');
-					readableName = readableName.replace(/>/g, '&gt;');
-
-					color = color || DEFAULT_COLOR;
-					scoreboard += `
-						<div onContextMenu="window.showUserDropdown({ event, userId: '${player._stats.userId}' })" class='cursor-pointer scoreboard-user-entry scoreboard-player-rank-${i} ${playerIsSelf}' style='color: ${color};font-weight:${defaultFontWeight}'>
-							<span class='scoreboard-player-name'>${readableName}</span> <small class='scoreboard-player-score'><span>${self.convertNumbersToKMB(sortedScores[i].value)}</span></small>
-						</div>
-					`;
-				}
-			}
-
-			taro.client.clientCount = sortedScores.length;
-
-			// $('#player-count').html(players.length);
-			// const playerCount = document.getElementById('player-count');
-
-			// if (playerCount) {
-			// 	playerCount.innerHTML = players.length;
-			// }
-
-			if (!self.scoreboardElement) {
-				self.scoreboardElement = document.getElementById('scoreboard');
-			}
-
-			if (!self.leaderboardToggleElement) {
-				self.leaderboardToggleElement = document.getElementById('leaderboard-toggle');
-			}
+			scoreboardElement.innerHTML = ''
 
 			if (self._hidden) {
-				if (self.scoreboardElement) {
-					self.scoreboardElement.innerHTML = '';
-				}
-				if (self.leaderboardToggleElement) {
-					self.leaderboardToggleElement.innerHTML = '&nbsp;<i class="far fa-caret-square-down" aria-hidden="true" onclick="taro.scoreboard.toggleScores()" style="cursor:pointer;"></i>';
+				if (leaderboardToggleElement) {
+					leaderboardToggleElement.innerHTML = 
+					`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="leaderboard-arrow">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+				 	</svg>`;
 				}
 			} else {
-				if (self.scoreboardElement) {
-					self.scoreboardElement.innerHTML = scoreboard;
-				} 
-				if (self.leaderboardToggleElement) {
-					self.leaderboardToggleElement.innerHTML = '&nbsp;<i class="far fa-caret-square-up" aria-hidden="true" onclick="taro.scoreboard.toggleScores()" style="cursor:pointer;"></i>';
+				if (leaderboardToggleElement) {
+					leaderboardToggleElement.innerHTML =
+					`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="leaderboard-arrow">>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+					</svg>`;
+				}
+
+				var sortedScores = [];
+				var players = taro.$$('player');
+
+				players.forEach(function (player) {
+					if (player._stats && (
+						// only display human players on scoreboard
+						player._stats.controlledBy == 'human'
+					)
+					) {
+						var playerId = player.id();
+						var score = 0;
+						if (self.scoreAttributeId && player._stats.attributes && player._stats.attributes[self.scoreAttributeId]) {
+							var playerAttribute = player._stats.attributes[self.scoreAttributeId];
+							score = playerAttribute.value;
+							var decimalPlace = parseInt(playerAttribute.decimalPlaces) || 0;
+							var score = parseFloat(playerAttribute.value).toFixed(decimalPlace);
+						}
+
+						sortedScores.push({
+							key: playerId,
+							value: score
+						});
+					}
+				});
+
+				sortedScores.sort(function (a, b) {
+					return a.value - b.value;
+				});
+
+				for (var i = sortedScores.length - 1; i >= 0; i--) {
+					var playerId = sortedScores[i].key;
+					var player = taro.$(playerId);
+					var defaultFontWeight = 500;
+					if (player) {
+						var color = null; // color to indicate human, animal, or my player on scoreboard
+						let playerIsSelf = '';
+
+						var playerType = taro.game.cloneAsset('playerTypes', player._stats.playerTypeId);
+
+						if (playerType && playerType.color) {
+							color = playerType.color;
+						}
+
+						// highlight myself (player) on leaderboard
+						if (player._stats.controlledBy == 'human' && player._stats.clientId == taro.network.id()) {
+							defaultFontWeight = 800;
+							color = '#99FF00';
+							playerIsSelf = 'scoreboard-player-is-myself';
+						}
+
+						var readableName = player._stats.name || '';
+
+						readableName = readableName.replace(/</g, '&lt;');
+						readableName = readableName.replace(/>/g, '&gt;');
+
+						color = color || DEFAULT_COLOR;
+
+						// using setAttributeNS instead of jQuery attr() because jQuery attr() converts 'onContextMenu' to 'oncontextmenu'
+						// playerDiv.get(0).setAttributeNS(null, "onContextMenu", `window.showUserDropdown({ event, userId: '${player._stats.userId}' })`)
+
+						$(scoreboardElement).append(
+							$('<div/>', {
+								class: `cursor-pointer scoreboard-user-entry scoreboard-player-rank-${i} ${playerIsSelf}`,
+								style: `color: ${color};font-weight:${defaultFontWeight}`,
+								onContextMenu: `window.showUserDropdown({ event, userId: '${player._stats.userId}' })`
+							}).append(
+								$('<span/>', {
+									class: 'scoreboard-player-name',
+									html: `${readableName}`
+								})
+							).append(
+								$('<small/>', {
+									class: 'scoreboard-player-score',
+									html: `<span> ${self.convertNumbersToKMB(sortedScores[i].value)}</span>`
+								})
+							)
+						);
+					}
 				}
 			}
 		}
+
+		this.isUpdateQueued = false;
 	},
 
 	hideScores: function () {
@@ -249,6 +255,7 @@ var ScoreboardComponent = TaroEntity.extend({
 
 	toggleScores: function () {
 		this._hidden = !this._hidden;
+		this.update();
 	}
 
 });

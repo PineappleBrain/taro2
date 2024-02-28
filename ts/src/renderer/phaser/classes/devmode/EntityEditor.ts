@@ -58,7 +58,7 @@ class EntityEditor {
             Object.values(this.handlers).forEach(handler => {
                 const worldPoint = this.gameScene.cameras.main.getWorldPoint(pointer.x, pointer.y);
                 const selectedEntityImage = this.selectedEntityImage;
-                if (!devModeTools.cursorButton.active || gameObject !== handler || !selectedEntityImage) return;
+                if (devModeTools.activeButton !== 'cursor' || gameObject !== handler || !selectedEntityImage) return;
                 const action = selectedEntityImage.action;
                 const editedAction = selectedEntityImage.editedAction;
                 
@@ -108,8 +108,8 @@ class EntityEditor {
                                 break;
                         }
                         targetPoint.rotate(selectedEntityImage.image.rotation);
-                        const x = selectedEntityImage.x + targetPoint.x;
-                        const y = selectedEntityImage.y + targetPoint.y;
+                        const x = Math.floor(Number(selectedEntityImage.x) + Number(targetPoint.x));
+                        const y = Math.floor(Number(selectedEntityImage.y) + Number(targetPoint.y));
                         selectedEntityImage.image.x = x;
                         selectedEntityImage.image.y = y;
                         editedAction.position = {x: x, y: y};
@@ -119,12 +119,14 @@ class EntityEditor {
             });
 
             devModeScene.entityImages.forEach((entityImage: Phaser.GameObjects.Image & {entity: EntityImage}) => {
-                if (!devModeTools.cursorButton.active || gameObject !== entityImage) return;
+                if (devModeTools.activeButton !== 'cursor' || gameObject !== entityImage) return;
                 const entity = entityImage.entity;
                 if (entity.dragMode === 'position') {
-                    gameObject.x = dragX;
-                    gameObject.y = dragY;
-                    entity.editedAction.position = {x: dragX, y: dragY};
+                    const x = Math.floor(dragX);
+                    const y = Math.floor(dragY);
+                    gameObject.x = x;
+                    gameObject.y = y;
+                    entity.editedAction.position = {x: x, y: y};
                 } else if (entity.dragMode === 'angle' && !isNaN(entity.action.angle)) {
                     const target = Phaser.Math.Angle.BetweenPoints(gameObject, { x: dragX, y: dragY });
                     gameObject.rotation = target;
@@ -132,8 +134,8 @@ class EntityEditor {
                 } else if (entity.dragMode === 'scale' && !isNaN(entity.action.width) && !isNaN(entity.action.height)) {
                     const dragScale = Math.min(500, Math.max(-250, (entity.startDragY - dragY)));
                     gameObject.scale = entity.scale + entity.scale * dragScale / 500;
-                    entity.editedAction.width = entityImage.displayWidth;
-                    entity.editedAction.height = entityImage.displayHeight;
+                    entity.editedAction.width = Math.floor(entityImage.displayWidth);
+                    entity.editedAction.height = Math.floor(entityImage.displayHeight);
                 }
                 entity.updateOutline();
             });
@@ -180,7 +182,7 @@ class EntityEditor {
 
             handler.on('pointerdown', (pointer) => {
                 const selectedEntityImage = this.selectedEntityImage;
-                if (!devModeTools.cursorButton.active || !selectedEntityImage) return;
+                if (devModeTools.activeButton !== 'cursor' || !selectedEntityImage) return;
 
                 this.activeHandler = true;
                 const worldPoint = this.gameScene.cameras.main.getWorldPoint(pointer.x, pointer.y);
@@ -246,13 +248,14 @@ class EntityEditor {
                     entityType: entityData.entityType,
                     position: {
                         function: 'xyCoordinate',
-                        x: worldPoint.x,
-                        y: worldPoint.y
+                        x: Math.floor(worldPoint.x),
+                        y: Math.floor(worldPoint.y)
                     },
                     width: width,
                     height: height,
                     angle: 0,
-                    actionId: taro.newIdHex()
+                    actionId: taro.newIdHex(),
+                    wasCreated: true
                 }
                 if (entityData.entityType === 'unitTypes') {
                     action.player = {
@@ -304,17 +307,17 @@ class EntityEditor {
             this.activeEntityPlacement = true;
 			inGameEditor.toggleEntityPlacementWindow && inGameEditor.toggleEntityPlacementWindow(true);
 
-            if (!this.devModeTools.paletteButton.hidden) {
+            /*if (!this.devModeTools.paletteButton.hidden) {
                 this.devModeTools.palette.toggle();
-            }
+            }*/
         } else {
             //hide entities list
             this.activeEntityPlacement = false;
 			inGameEditor.toggleEntityPlacementWindow && inGameEditor.toggleEntityPlacementWindow(false);
 
-            if (this.devModeTools.paletteButton.hidden) {
+            /*if (this.devModeTools.paletteButton.hidden) {
                 this.devModeTools.palette.toggle();
-            }
+            }*/
         }
     }
 
@@ -384,11 +387,11 @@ class EntityEditor {
         const distanceToCurrent = Phaser.Math.Distance.Between(imagePoint.x, imagePoint.y, worldPoint.x, worldPoint.y);
         if (width) {
             selectedEntityImage.image.scaleX = selectedEntityImage.scaleX * (distanceToCurrent / distanceToStart);
-            editedAction.width = selectedEntityImage.image.displayWidth;
+            editedAction.width = Math.floor(selectedEntityImage.image.displayWidth);
         }
         if (height) {
             selectedEntityImage.image.scaleY = selectedEntityImage.scaleY * (distanceToCurrent / distanceToStart);
-            editedAction.height = selectedEntityImage.image.displayHeight;
+            editedAction.height = Math.floor(selectedEntityImage.image.displayHeight);
         }
     }
 
