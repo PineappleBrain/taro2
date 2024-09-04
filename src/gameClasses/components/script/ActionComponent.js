@@ -447,7 +447,7 @@ var ActionComponent = TaroEntity.extend({
 						var previousAcionBlockIdx = self._script.currentActionLineNumber;
 
 						const scriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-						const scriptName = self._script.param.getValue(action.scriptName);
+						const scriptName = self._script.param.getValue(action.scriptName, vars);
 						self._script.runScript(scriptName, scriptParams);
 
 						self._script.currentScriptId = previousScriptId;
@@ -461,7 +461,7 @@ var ActionComponent = TaroEntity.extend({
 						var entity = self._script.param.getValue(action.entity, vars);
 						if (entity) {
 							const scriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-							const scriptName = self._script.param.getValue(action.scriptName);
+							const scriptName = self._script.param.getValue(action.scriptName, vars);
 							entity.script.runScript(scriptName, scriptParams);
 
 							self._script.currentScriptId = previousScriptId;
@@ -475,7 +475,7 @@ var ActionComponent = TaroEntity.extend({
 							var previousAcionBlockIdx = self._script.currentActionLineNumber;
 
 							const localScriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-							const localScriptName = self._script.param.getValue(action.scriptName);
+							const localScriptName = self._script.param.getValue(action.scriptName, vars);
 							const localPlayer = self._script.param.getValue(action.player, vars);
 							localPlayer.streamUpdateData(
 								[{ script: { name: localScriptName, params: self.filterSerializable(localScriptParams) } }],
@@ -494,7 +494,7 @@ var ActionComponent = TaroEntity.extend({
 							var entity = self._script.param.getValue(action.entity, vars);
 							if (entity) {
 								const localScriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-								const localScriptName = self._script.param.getValue(action.scriptName);
+								const localScriptName = self._script.param.getValue(action.scriptName, vars);
 								const localPlayer = self._script.param.getValue(action.player, vars);
 								localPlayer.streamUpdateData(
 									[
