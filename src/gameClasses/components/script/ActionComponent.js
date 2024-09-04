@@ -16,7 +16,7 @@ var ActionComponent = TaroEntity.extend({
 			obj.forEach((element) => {
 				try {
 					result.push(JSON.stringify(element));
-				} catch (e) {}
+				} catch (e) { }
 			});
 			return result;
 		} else if (typeof obj === 'object') {
@@ -24,7 +24,7 @@ var ActionComponent = TaroEntity.extend({
 			Object.entries(obj).forEach(([k, v]) => {
 				try {
 					result[k] = JSON.stringify(v);
-				} catch (e) {}
+				} catch (e) { }
 			});
 			return result;
 		} else {
@@ -447,7 +447,8 @@ var ActionComponent = TaroEntity.extend({
 						var previousAcionBlockIdx = self._script.currentActionLineNumber;
 
 						const scriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-						self._script.runScript(action.scriptName, scriptParams);
+						const scriptName = self._script.param.getValue(action.scriptName);
+						self._script.runScript(scriptName, scriptParams);
 
 						self._script.currentScriptId = previousScriptId;
 						self._script.currentActionLineNumber = previousAcionBlockIdx;
@@ -460,7 +461,8 @@ var ActionComponent = TaroEntity.extend({
 						var entity = self._script.param.getValue(action.entity, vars);
 						if (entity) {
 							const scriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
-							entity.script.runScript(action.scriptName, scriptParams);
+							const scriptName = self._script.param.getValue(action.scriptName);
+							entity.script.runScript(scriptName, scriptParams);
 
 							self._script.currentScriptId = previousScriptId;
 							self._script.currentActionLineNumber = previousAcionBlockIdx;
@@ -473,9 +475,10 @@ var ActionComponent = TaroEntity.extend({
 							var previousAcionBlockIdx = self._script.currentActionLineNumber;
 
 							const localScriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
+							const localScriptName = self._script.param.getValue(action.scriptName);
 							const localPlayer = self._script.param.getValue(action.player, vars);
 							localPlayer.streamUpdateData(
-								[{ script: { name: action.scriptName, params: self.filterSerializable(localScriptParams) } }],
+								[{ script: { name: localScriptName, params: self.filterSerializable(localScriptParams) } }],
 								localPlayer._stats.clientId
 							);
 							self._script.currentScriptId = previousScriptId;
@@ -491,12 +494,13 @@ var ActionComponent = TaroEntity.extend({
 							var entity = self._script.param.getValue(action.entity, vars);
 							if (entity) {
 								const localScriptParams = { ...vars, triggeredFrom: vars.isWorldScript ? 'world' : 'map' };
+								const localScriptName = self._script.param.getValue(action.scriptName);
 								const localPlayer = self._script.param.getValue(action.player, vars);
 								localPlayer.streamUpdateData(
 									[
 										{
 											script: {
-												name: action.scriptName,
+												name: localScriptName,
 												entityId: entity.id(),
 												params: self.filterSerializable(localScriptParams),
 											},
